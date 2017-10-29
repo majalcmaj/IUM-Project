@@ -10,10 +10,6 @@ const config = require('../config');
 const localOptions = {usernameField: 'email'};
 const localLogin = new LocalStrategy(localOptions, function (email, password, done) {
     // Verify email and password, call done with the user
-
-    // if email and pwd correct
-
-    // otherwise - done with false
     User.findOne({email: email}, function(err, user) {
         if(err) {return done(err);}
 
