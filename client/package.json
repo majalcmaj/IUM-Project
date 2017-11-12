@@ -23,9 +23,12 @@
     "expo": "^22.0.0",
     "react": "16.0.0-beta.5",
     "react-native": "^0.49.5",
+    "react-native-progress": "^3.4.0",
     "react-navigation": "^1.0.0-beta.15",
     "react-redux": "^5.0.6",
     "redux": "^3.7.2",
-    "redux-thunk": "^2.2.0"
+    "redux-thunk": "^2.2.0",
+    "tcomb-form-native": "^0.6.11",
+    "tiny-promisify": "^1.0.0"
   }
 }
