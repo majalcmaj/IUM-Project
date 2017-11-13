@@ -4,7 +4,7 @@ import {connect} from 'react-redux';
 
 import ResetAction from '../actions/navigation/ResetAction';
 import t from "tcomb-form-native";
-import {signIn} from "../actions/index";
+import {signIn} from "../actions/AuthActions";
 
 const Form = t.form.Form;
 

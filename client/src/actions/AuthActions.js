@@ -1,13 +1,10 @@
-import {ERROR, SIGN_IN, SIGN_UP} from "./types";
+import {AUTH_ERROR, SIGN_IN, SIGN_UP} from "./types";
 import {AsyncStorage} from 'react-native';
 import {STORAGE_NAME, SERVER_URL} from "../common/consts";
 import {setAccesToken} from "../helpers/AccessToken";
-const AUTH_ERROR = "auth_error";
-
 
 export function signIn(email, password, callback) {
     return function (dispatch) {
-
         fetch(`${SERVER_URL}/signIn`, {
             method: 'POST',
             timeout: 5000,
@@ -36,14 +33,14 @@ export function signIn(email, password, callback) {
             })
                 .catch(() => {
                     dispatch({
-                        type: ERROR,
+                        type: AUTH_ERROR,
                         payload: "An error has occurred during accessing the local storage."
                     });
                 });
         }).catch((err) => {
             const message = err.type === AUTH_ERROR ? err.message : "There was a problem connecting to server.";
             dispatch({
-                type: ERROR,
+                type: AUTH_ERROR,
                 payload: message
             });
         })

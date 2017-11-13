@@ -31,10 +31,13 @@ module.exports.getById = function (req, res, next) {
 module.exports.updateAmount = function (req, res, next) {
     findProductById(req, res, next, function(product) {
         const increaseBy = parseInt(req.body.increase_by);
+        let amount = product.amount;
+        if(!amount) {amount = 0}
         if(product.amount + increaseBy < 0) {
             return res.status(422).send({error: "Amount cannot drop below 0."});
         }
-        product.amount += increaseBy;
+        amount += increaseBy;
+        product.amount = amount;
         product.save(function(err, savedProduct) {
             if(err) {return next(err);}
             else {

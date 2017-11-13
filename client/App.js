@@ -7,13 +7,17 @@ import {applyMiddleware, combineReducers, createStore} from 'redux';
 import reducers from './src/reducers';
 import LoginScreen from './src/components/LoginScreen';
 import ProductListScreen from "./src/components/ProductListScreen";
+import CreateProductScreen from "./src/components/CreateProductScreen";
+import ProductScreen from "./src/components/ProductScreen";
 
 const Navigator = StackNavigator({
     ProductListScreen: {screen: ProductListScreen},
-    LoginScreen: {screen: LoginScreen}
+    LoginScreen: {screen: LoginScreen},
+    ProductScreen: {screen: ProductScreen},
+    CreateProductScreen: {screen: CreateProductScreen}
 });
 
-const initialState = Navigator.router.getStateForAction(Navigator.router.getActionForPathAndParams('LoginScreen'));
+const initialState = Navigator.router.getStateForAction(Navigator.router.getActionForPathAndParams('ProductListScreen'));
 
 const navReducer = (state = initialState, action) => {
     const nextState = Navigator.router.getStateForAction(action, state);

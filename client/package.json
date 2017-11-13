@@ -28,7 +28,6 @@
     "react-redux": "^5.0.6",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
-    "tcomb-form-native": "^0.6.11",
-    "tiny-promisify": "^1.0.0"
+    "tcomb-form-native": "^0.6.11"
   }
 }

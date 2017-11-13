@@ -1,4 +1,13 @@
 export const SIGN_IN = "sign_in";
 export const SIGN_OUT = "sign_out";
 export const SIGN_UP = "sign_up";
-export const ERROR = "error";
+export const GET_PRODUCT = "get_single_product";
+export const GET_ALL_PRODUCTS = "get_all_products";
+export const CREATE_PRODUCT = "create_product";
+export const UPDATE_PRODUCT = "product_updated";
+
+export const GET_PRODUCT_ERROR = "get_product_error";
+export const CREATE_PRODUCT_ERROR = "create_product_error";
+export const DELETE_PRODUCT_ERROR = "delete_product_error";
+export const PRODUCT_LIST_ERROR = "product_list_error";
+export const AUTH_ERROR = "error";
