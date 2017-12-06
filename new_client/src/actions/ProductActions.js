@@ -1,170 +1,85 @@
-import {SERVER_URL} from "../common/consts";
 import {
-    CREATE_PRODUCT, CREATE_PRODUCT_ERROR, DELETE_PRODUCT_ERROR, GET_ALL_PRODUCTS, GET_PRODUCT, GET_PRODUCT_ERROR,
-    PRODUCT_LIST_ERROR, UPDATE_PRODUCT
+    CREATE_PRODUCT, CREATE_PRODUCT_ERROR, DELETE_CURRENT_PRODUCT, DELETE_PRODUCT_ERROR, GET_ALL_PRODUCTS, GET_PRODUCT,
+    GET_PRODUCT_ERROR,
+    PRODUCT_LIST_ERROR, UPDATE_PRODUCT, UPDATE_PRODUCT_ERROR
 } from "./types";
-import {getAccessToken} from "../helpers/AccessToken";
+
+import uuid4 from 'uuid/v4';
+import realm from '../persistence';
 
 const SERVER_ERROR = "server_error";
 
 export function getAllProducts() {
-    return function (dispatch) {
-        getAccessToken().then(token => {
-            const headers = new Headers({authorization: token});
-            return fetch(`${SERVER_URL}/product`, {
-                method: 'GET',
-                timeout: 5000,
-                headers
-            })
-        }).then(response => {
-            if (response.ok) {
-                return response.json()
-            }
-            const error = Error(`Server returned with status ${response.status}`);
-            error.type = SERVER_ERROR;
-            throw error;
-        }).then((responseJson) => {
-            dispatch({
-                type: GET_ALL_PRODUCTS,
-                payload: responseJson
-            });
-        }).catch((err) => {
-            const message = err.type === SERVER_ERROR ? err.message : "There was a problem connecting to server.";
-            dispatch({
-                type: PRODUCT_LIST_ERROR,
-                payload: message
-            });
-        })
-    }
+    return {
+        type: GET_ALL_PRODUCTS,
+        payload: Array.from(realm.objects("Product").filtered("deleted = false"))
+    };
 }
 
 export function getProduct(productId) {
-    return function (dispatch) {
-        getAccessToken().then(token => {
-            const headers = new Headers({authorization: token});
-            return fetch(`${SERVER_URL}/product/${productId}`, {
-                method: 'GET',
-                timeout: 5000,
-                headers
-            })
-        }).then(response => {
-            if (response.ok) {
-                return response.json()
-            }
-            const error = Error(`Server returned with status ${response.status}`);
-            error.type = SERVER_ERROR;
-            throw error;
-        }).then((responseJson) => {
-            dispatch({
-                type: GET_PRODUCT,
-                payload: responseJson
-            });
-        }).catch((err) => {
-            const message = err.type === SERVER_ERROR ? err.message : "There was a problem connecting to server.";
-            dispatch({
-                type: GET_PRODUCT_ERROR,
-                payload: message
-            });
-        })
-    }
+    return {
+        type: GET_PRODUCT,
+        payload: realm.objects("Product").filtered(`_id = "${productId}"`)[0]
+    };
 }
 
 export function createProduct(productData, callback) {
     return function (dispatch) {
-        getAccessToken().then(token => {
-            const headers = new Headers({authorization: token});
-            return fetch(`${SERVER_URL}/product`, {
-                method: 'POST',
-                timeout: 5000,
-                headers,
-                body: JSON.stringify(productData)
-            })
-        }).then(response => {
-            if (response.ok) {
-                return response.json()
-            }
-            const error = Error(`Server returned with status ${response.status}`);
-            error.type = SERVER_ERROR;
-            throw error;
-        }).then((responseJson) => {
+        try {
+            const newProduct = {
+                _id: uuid4(),
+                name: productData.name,
+                store: productData.store,
+                price: productData.price,
+                amount: 0,
+
+                created: true,
+                deleted: false,
+                localAmountDelta: 0
+            };
+            realm.write(() => {
+                realm.create('Product', newProduct);
+            });
             dispatch({
                 type: CREATE_PRODUCT,
-                payload: responseJson
+                payload: newProduct
             });
-            callback();
-        }).catch((err) => {
-            const message = err.type === SERVER_ERROR ? err.message : "There was a problem connecting to server.";
-            dispatch({
-                type: CREATE_PRODUCT_ERROR,
-                payload: message
-            });
-        })
+            callback(newProduct);
+        } catch (e) {
+            dispatch({type: CREATE_PRODUCT_ERROR, payload: `Failed to add product to database: ${e}}`});
+        }
     }
 }
 
 export function increaseProductCount(product, byCount) {
     return function (dispatch) {
-        getAccessToken().then(token => {
-            const headers = new Headers({authorization: token});
-            return fetch(`${SERVER_URL}/product/${product._id}/amount`, {
-                method: 'PUT',
-                timeout: 5000,
-                headers,
-                body: JSON.stringify({
-                    increase_by: byCount
-                })
-            })
-        }).then(response => {
-            let message = null;
-            if (response.ok) {
-                return response.json()
-            } else if (response.status === 422) {
-                message = "The amount has to be greater than 0";
+        try {
+            if (product.amount + byCount > 0) {
+                realm.write(() => {
+                    product.amount += byCount;
+                    product.localAmountDelta += byCount;
+                });
+                dispatch({type: UPDATE_PRODUCT, payload: product});
             } else {
-                message = `Server returned with status ${response.status}`;
+                dispatch({type: UPDATE_PRODUCT_ERROR, payload: "The amount of products cannot be below 0!"});
             }
-            const error = Error(message);
-            error.type = SERVER_ERROR;
-            throw error;
-        }).then((responseJson) => {
-            dispatch({
-                type: UPDATE_PRODUCT,
-                payload: responseJson
-            });
-        }).catch((err) => {
-            const message = err.type === SERVER_ERROR ? err.message : "There was a problem connecting to server.";
-            dispatch({
-                type: GET_PRODUCT_ERROR,
-                payload: message
-            });
-        })
+        } catch (e) {
+            dispatch({type: UPDATE_PRODUCT_ERROR, payload: `Failed to update product in database: ${e}}`});
+        }
     }
 }
 
 export function removeProduct(product, callback) {
     return function (dispatch) {
-        getAccessToken().then(token => {
-            const headers = new Headers({authorization: token});
-            return fetch(`${SERVER_URL}/product/${product._id}`, {
-                method: 'DELETE',
-                timeout: 5000,
-                headers
-            })
-        }).then(response => {
-            let message = null;
-            if (response.ok) {
-                callback();
-            }
-            const error = Error(`Server returned with status ${response.status}`);
-            error.type = SERVER_ERROR;
-            throw error;
-        }).catch((err) => {
-            const message = err.type === SERVER_ERROR ? err.message : "There was a problem connecting to server.";
-            dispatch({
-                type: DELETE_PRODUCT_ERROR,
-                payload: message
+        try {
+            realm.write(() => {
+                product.deleted = true;
             });
-        })
+            dispatch({type: DELETE_CURRENT_PRODUCT, payload: null});
+            callback();
+        } catch (e) {
+            dispatch({type: DELETE_PRODUCT_ERROR, payload: `Failed to update product in database: ${e}}`});
+        }
     }
 }
 

@@ -75,15 +75,10 @@ class ProductScreen extends Component {
 }
 
 function mapStateToProps(state) {
-    return {currentProduct: state.products.currentProduct};
-}
-
-function mapDispatchToProps(dispatch) {
     return {
-        onTodoClick: (id) => {
-            dispatch(toggleTodo(id))
-        }
-    }
+        currentProduct: state.products.currentProduct,
+        updateNo: state.products.updateNo
+    };
 }
 
 export default connect(mapStateToProps,
