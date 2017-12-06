@@ -1,4 +1,0 @@
-#Wed Nov 29 17:30:02 CET 2017
-base.0=/home/mc/WebstormProjects/IUM-Project/client/android/app/build/intermediates/transforms/dexMerger/debug/5
-path.0=classes.dex
-renamed.0=classes.dex

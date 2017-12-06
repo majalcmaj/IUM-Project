@@ -60,3 +60,5 @@ typings/
 # Secret files
 config.js
 
+.idea
+
