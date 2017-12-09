@@ -4,6 +4,7 @@ import {delAccessToken, getAccessToken} from "../helpers/AccessToken";
 import resetNavigationAction from '../actions/navigation/ResetAction';
 import {connect} from 'react-redux';
 import {getAllProducts} from '../actions/ProductActions';
+import {startSynchronization} from "../actions/SyncActions";
 
 const rightArrow = require('../../res/img/next.png');
 
@@ -56,12 +57,22 @@ class ProductListScreen extends Component {
         });
     }
 
+    showSyncError() {
+        if(this.props.sync.error) {
+            return(<Text style={styles.error}>{this.props.sync.error}</Text>);
+        }else {
+            return null;
+        }
+    }
+
     render() {
         if (!this.props.products.products) {
             return <View style={styles.loadingContainer}><Text>Loading...</Text></View>
         } else {
             return (
                 <View>
+                    <Button
+                        title="Synchronize" onPress={ this.props.startSynchronization } />
                     <Button
                         title="Add product" onPress={() => this.navigate("CreateProductScreen", {refresh: this.getProductsList})} />
                     <ScrollView>
@@ -77,10 +88,13 @@ class ProductListScreen extends Component {
 }
 
 function mapStateToProps(state) {
-    return {products: state.products}
+    return {
+        products: state.products,
+        sync: state.sync
+    }
 }
 
-export default connect(mapStateToProps, {getAllProducts})(ProductListScreen);
+export default connect(mapStateToProps, {getAllProducts, startSynchronization})(ProductListScreen);
 
 const styles = StyleSheet.create({
     loadingContainer: {
@@ -110,5 +124,9 @@ const styles = StyleSheet.create({
     },
     itemCount: {
         color: "#99bbdd"
+    },
+    error: {
+        color: "#FF0000",
+        fontSize: 14
     }
 });

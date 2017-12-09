@@ -13,7 +13,8 @@ Product.schema = {
 
         created: "bool",
         deleted: "bool",
-        localAmountDelta: "int"
+        localAmountDelta: "int",
+        deltaModified: {type: "bool", default: false}
     },
 };
 

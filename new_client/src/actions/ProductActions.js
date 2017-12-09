@@ -58,6 +58,9 @@ export function increaseProductCount(product, byCount) {
                 realm.write(() => {
                     product.amount += byCount;
                     product.localAmountDelta += byCount;
+                    if (!product.deltaModified) {
+                        product.deltaModified = true;
+                    }
                 });
                 dispatch({type: UPDATE_PRODUCT, payload: product});
             } else {

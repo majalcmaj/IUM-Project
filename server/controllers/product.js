@@ -52,7 +52,7 @@ module.exports.remove = function (req, res, next) {
         product.remove(function(err) {
             if(err) {return next(err);}
             else {
-                return res.send();
+                return res.send(product);
             }
         });
     });
@@ -73,13 +73,26 @@ module.exports.create = function (req, res, next) {
             if (existingProduct) {
                 return res.status(422).send({error: "The product with given name already exists"})
             }
-            const product = new Product({
-                name: body.name,
-                store: body.store,
-                price: body.price,
-                amount: body.amount,
-                user: req.user._id
-            });
+
+            let product = null;
+            if(body._id) {
+                product = new Product({
+                    _id: body._id,
+                    name: body.name,
+                    store: body.store,
+                    price: body.price,
+                    amount: body.amount,
+                    user: req.user._id
+                });
+            } else {
+                product = new Product({
+                    name: body.name,
+                    store: body.store,
+                    price: body.price,
+                    amount: body.amount,
+                    user: req.user._id
+                });
+            }
 
             product.save(function(err, savedProduct) {
                 if(err) {return next(err)}
