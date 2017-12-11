@@ -1,7 +1,8 @@
-import {AUTH_ERROR, SIGN_IN, SIGN_UP} from "./types";
+import {AUTH_ERROR, SIGN_IN, SIGN_OUT, SIGN_UP} from "./types";
 import {AsyncStorage} from 'react-native';
 import {STORAGE_NAME, SERVER_URL} from "../common/consts";
-import {setAccesToken} from "../helpers/AccessToken";
+import {removeAccessToken, setAccesToken} from "../helpers/AccessToken";
+import {createDeviceGuid, getDeviceGuid, saveDeviceGuid} from "../helpers/DeviceGuid";
 
 export function signIn(email, password, callback) {
     return function (dispatch) {
@@ -29,8 +30,16 @@ export function signIn(email, password, callback) {
                 dispatch({
                     type: SIGN_IN,
                 });
-                callback();
+                return getDeviceGuid();
+            }).then((deviceGuid) => {
+                if (!deviceGuid) {
+                    return saveDeviceGuid(createDeviceGuid());
+                }
+                else {
+                    return null;
+                }
             })
+                .then(callback)
                 .catch(() => {
                     dispatch({
                         type: AUTH_ERROR,
@@ -44,5 +53,15 @@ export function signIn(email, password, callback) {
                 payload: message
             });
         })
+    }
+}
+
+export function signOut(callback) {
+    return (dispatch) => {
+        removeAccessToken()
+            .then(() => {
+                dispatch({type: SIGN_OUT, payload: null});
+                callback()
+            });
     }
 }

@@ -4,6 +4,7 @@ import {SERVER_URL} from "../common/consts";
 import {getAccessToken} from "../helpers/AccessToken";
 import _ from 'lodash';
 import {GET_ALL_PRODUCTS, PRODUCTS_SYNCHRONIZED, SYNC_ERROR} from "./types";
+import {getDeviceGuid} from "../helpers/DeviceGuid";
 
 function createAxiosInstance() {
     return getAccessToken().then(accessToken => {
@@ -62,7 +63,11 @@ export function startSynchronization() {
 
                     // What with created and deleted locally? - Should be deleted earlier!
                     const deletedProductsArray = Array.from(realm.objects("Product").filtered("deleted = true"));
-                    return Promise.all(_.map(deletedProductsArray, (toDelProd) => axiosInst.delete(`${SERVER_URL}/product/${toDelProd._id}`)));
+                    const deletedFromServer = _.remove(deletedProductsArray, (product) => product.created === true);
+                    _.filter(deletedProductsArray, (product) => product.created === true).forEach((product) => {
+                        realm.delete(product);
+                    });
+                    return Promise.all(_.map(deletedFromServer, (toDelProd) => axiosInst.delete(`${SERVER_URL}/product/${toDelProd._id}`)));
                 });
             const createdPromise = toDelPromise.then((deletedArray) => {
                     if (deletedArray) {
@@ -81,7 +86,7 @@ export function startSynchronization() {
                 dispatch({type: SYNC_ERROR, payload: error});
             });
             createdPromise.then((createdArray) => {
-                if(createdArray) {
+                if (createdArray) {
                     createdArray.forEach((created) => {
                         const createdProd = realm.objectForPrimaryKey("Product", created.data._id);
                         realm.write(() => {
@@ -89,6 +94,23 @@ export function startSynchronization() {
                         })
                     });
                 }
+                return getDeviceGuid();
+            }).then((deviceGuid) => {
+                const modifiedProducts = Array.from(realm.objects("Product").filtered("deltaModified = true"));
+                return Promise.all(modifiedProducts.map((product) => {
+                    axiosInst.put(`${SERVER_URL}/product/${product._id}/delta`, {
+                        deviceGuid,
+                        localAmountDelta: product.localAmountDelta
+                    })
+                }));
+            }).then(updatedProducts => {
+                updatedProducts.forEach((productSrv)=>{
+                    const prodDb = realm.objectForPrimaryKey("Product", productSrv._id);
+                    realm.write(() =>{
+                        prodDb.deltaModified = false;
+                        prodDb.amount = productSrv.amount;
+                    })
+                });
                 dispatch({type: PRODUCTS_SYNCHRONIZED, payload: realm.objects("Product")});
             }).catch((error) => {
                 console.log(error);

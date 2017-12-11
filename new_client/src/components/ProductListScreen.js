@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
 import {Button, Image, ScrollView, Text, View, StyleSheet, TouchableOpacity} from 'react-native';
-import {delAccessToken, getAccessToken} from "../helpers/AccessToken";
+import {removeAccessToken, getAccessToken} from "../helpers/AccessToken";
 import resetNavigationAction from '../actions/navigation/ResetAction';
 import {connect} from 'react-redux';
 import {getAllProducts} from '../actions/ProductActions';
 import {startSynchronization} from "../actions/SyncActions";
+import {signOut} from "../actions/AuthActions";
 
 const rightArrow = require('../../res/img/next.png');
 
@@ -28,13 +29,10 @@ class ProductListScreen extends Component {
         });
     }
 
-    componentWillMount() {
-        this.getProductsList();
-    }
-
     logOut() {
-        delAccessToken();
-        this.navDispatch(resetNavigationAction("LoginScreen"));
+        this.props.signOut(()=>{
+            this.navDispatch(resetNavigationAction("LoginScreen"));
+        });
     }
 
     navToProduct(productId) {
@@ -66,6 +64,7 @@ class ProductListScreen extends Component {
     }
 
     render() {
+        this.getProductsList();
         if (!this.props.products.products) {
             return <View style={styles.loadingContainer}><Text>Loading...</Text></View>
         } else {
@@ -94,7 +93,7 @@ function mapStateToProps(state) {
     }
 }
 
-export default connect(mapStateToProps, {getAllProducts, startSynchronization})(ProductListScreen);
+export default connect(mapStateToProps, {getAllProducts, startSynchronization, signOut})(ProductListScreen);
 
 const styles = StyleSheet.create({
     loadingContainer: {

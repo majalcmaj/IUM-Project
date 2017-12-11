@@ -13,6 +13,7 @@ module.exports = function(app) {
 
     app.get('/product/:id', requireAuth, Product.getById);
     app.put('/product/:id/amount', requireAuth, Product.updateAmount);
+    app.put('/product/:id/delta', requireAuth, Product.updateDelta);
     app.delete('/product/:id', requireAuth, Product.remove);
 
     app.post('/product', requireAuth, Product.create);

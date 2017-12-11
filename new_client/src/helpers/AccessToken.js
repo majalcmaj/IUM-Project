@@ -9,7 +9,7 @@ export function getAccessToken() {
     return AsyncStorage.getItem(`${STORAGE_NAME}:token`);
 }
 
-export function delAccessToken() {
+export function removeAccessToken() {
     return AsyncStorage.removeItem(`${STORAGE_NAME}:token`);
 }
 

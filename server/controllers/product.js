@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const _ = require('lodash');
 
 function findProductById(req, res, next, whenFound) {
     const id = req.params.id;
@@ -13,9 +14,9 @@ function findProductById(req, res, next, whenFound) {
             }
             else if (!existingProduct) {
                 return res.status(404).send();
-            }else if(String(req.user._id) !== String(existingProduct.user) ) {
+            } else if (String(req.user._id) !== String(existingProduct.user)) {
                 return res.status(403).send();
-            }else {
+            } else {
                 return whenFound(existingProduct);
             }
         }
@@ -23,23 +24,27 @@ function findProductById(req, res, next, whenFound) {
 }
 
 module.exports.getById = function (req, res, next) {
-    findProductById(req, res, next, function(product) {
-       return res.send(product);
+    findProductById(req, res, next, function (product) {
+        return res.send(product);
     });
 };
 
 module.exports.updateAmount = function (req, res, next) {
-    findProductById(req, res, next, function(product) {
+    findProductById(req, res, next, function (product) {
         const increaseBy = parseInt(req.body.increase_by);
         let amount = product.amount;
-        if(!amount) {amount = 0}
-        if(product.amount + increaseBy < 0) {
+        if (!amount) {
+            amount = 0
+        }
+        if (product.amount + increaseBy < 0) {
             return res.status(422).send({error: "Amount cannot drop below 0."});
         }
         amount += increaseBy;
         product.amount = amount;
-        product.save(function(err, savedProduct) {
-            if(err) {return next(err);}
+        product.save(function (err, savedProduct) {
+            if (err) {
+                return next(err);
+            }
             else {
                 return res.status(200).send(product);
             }
@@ -47,10 +52,52 @@ module.exports.updateAmount = function (req, res, next) {
     });
 };
 
+module.exports.updateDelta = function (req, res, next) {
+    findProductById(req, res, next, function (product) {
+            const deviceGuid = req.body.deviceGuid;
+            const newDelta = parseInt(req.body.localAmountDelta);
+            const index = _.findIndex(product.deltas, guidDeltaPair => guidDeltaPair.deviceGuid === deviceGuid);
+            if (index !== -1) {
+                const currentDelta = product.deltas[index].localAmountDelta;
+                const difference = newDelta - currentDelta;
+                let amount = product.amount;
+                amount += difference;
+                if (amount < 0) {
+                    return res.status(422).send({error: "Amount cannot drop below 0."});
+                }
+                product.amount = amount;
+                product.deltas[index].localAmountDelta = newDelta;
+            } else {
+                let amount = product.amount;
+                amount += newDelta;
+                if (amount < 0) {
+                    return res.status(422).send({error: "Amount cannot drop below 0."});
+                }
+                // Connected with mongoose bug #4455
+                product.deltas = product.deltas.concat([{deviceGuid, localAmountDelta: newDelta}]);
+            }
+
+            product.save(function (err, savedProduct) {
+                if (err) {
+                    return next(err);
+                }
+                else {
+                    return res.status(200).send({
+                        _id: product._id,
+                        amount: product.amount
+                    });
+                }
+            });
+        }
+    );
+};
+
 module.exports.remove = function (req, res, next) {
-    findProductById(req, res, next, function(product) {
-        product.remove(function(err) {
-            if(err) {return next(err);}
+    findProductById(req, res, next, function (product) {
+        product.remove(function (err) {
+            if (err) {
+                return next(err);
+            }
             else {
                 return res.send(product);
             }
@@ -75,7 +122,7 @@ module.exports.create = function (req, res, next) {
             }
 
             let product = null;
-            if(body._id) {
+            if (body._id) {
                 product = new Product({
                     _id: body._id,
                     name: body.name,
@@ -94,8 +141,10 @@ module.exports.create = function (req, res, next) {
                 });
             }
 
-            product.save(function(err, savedProduct) {
-                if(err) {return next(err)}
+            product.save(function (err, savedProduct) {
+                if (err) {
+                    return next(err)
+                }
                 res.status(201).send(savedProduct);
             });
         }
@@ -103,8 +152,10 @@ module.exports.create = function (req, res, next) {
 };
 
 module.exports.getAll = function (req, res, next) {
-    Product.find({user: req.user._id}, function(err, products) {
-        if(err) {return next(err);}
+    Product.find({user: req.user._id}, function (err, products) {
+        if (err) {
+            return next(err);
+        }
         else {
             res.send(products);
         }
