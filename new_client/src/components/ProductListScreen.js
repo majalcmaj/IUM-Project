@@ -35,14 +35,16 @@ class ProductListScreen extends Component {
         });
     }
 
-    navToProduct(productId) {
-        this.navigate("ProductScreen", {productId: productId, refresh: this.getProductsList});
+    getNavToProductFn(productId) {
+        return () => {
+            this.navigate("ProductScreen", {productId: productId, refresh: this.getProductsList});
+        }
     }
 
     productsList() {
         return this.props.products.products.map((product) => {
             return (
-                <TouchableOpacity key={product._id} onPress={() => this.navToProduct(product._id)}>
+                <TouchableOpacity key={product._id} onPress={this.getNavToProductFn(product._id)}>
                     <View style={styles.item}>
                         <View style={styles.prodInfo}>
                             <Text style={styles.itemTitle}>{product.name}</Text>
@@ -74,6 +76,7 @@ class ProductListScreen extends Component {
                         title="Synchronize" onPress={ this.props.startSynchronization } />
                     <Button
                         title="Add product" onPress={() => this.navigate("CreateProductScreen", {refresh: this.getProductsList})} />
+                    {this.showSyncError()}
                     <ScrollView>
                         {this.productsList()}
                     </ScrollView>
@@ -126,6 +129,7 @@ const styles = StyleSheet.create({
     },
     error: {
         color: "#FF0000",
-        fontSize: 14
+        fontSize: 14,
+        textAlign: 'center'
     }
 });

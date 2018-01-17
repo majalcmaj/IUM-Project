@@ -80,8 +80,13 @@ export function removeProduct(product, callback) {
     return function (dispatch) {
         try {
             realm.write(() => {
-                product.deleted = true;
+                if (product.created) {
+                    realm.delete(product);
+                } else {
+                    product.deleted = true;
+                }
             });
+
             dispatch({type: DELETE_CURRENT_PRODUCT, payload: product});
             callback();
         } catch (e) {
@@ -99,7 +104,7 @@ export function setAsCurrentProduct(product) {
 
 function generateMongoID() {
     const timestamp = (new Date().getTime() / 1000 | 0).toString(16);
-    return timestamp + 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, function() {
+    return timestamp + 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, function () {
         return (Math.random() * 16 | 0).toString(16);
     }).toLowerCase();
 }

@@ -6,12 +6,8 @@ import ResetAction from "../actions/navigation/ResetAction";
 
 class ProductScreen extends Component {
     componentWillMount() {
-        const {productId, product} = this.props.navigation.state.params;
-        if(product) {
-            this.props.setAsCurrentProduct(product);
-        } else {
-            this.props.getProduct(productId);
-        }
+        const { productId } = this.props.navigation.state.params;
+        this.props.getProduct(productId);
     }
 
     componentWillUnmount() {

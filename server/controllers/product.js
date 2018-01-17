@@ -46,7 +46,7 @@ module.exports.updateAmount = function (req, res, next) {
                 return next(err);
             }
             else {
-                return res.status(200).send(product);
+                return res.status(200).send(savedProduct);
             }
         });
     });
@@ -63,7 +63,7 @@ module.exports.updateDelta = function (req, res, next) {
                 let amount = product.amount;
                 amount += difference;
                 if (amount < 0) {
-                    return res.status(422).send({error: "Amount cannot drop below 0."});
+                    return res.status(422).send({_id: product._id, increaseDelta: -amount});
                 }
                 product.amount = amount;
                 product.deltas[index].localAmountDelta = newDelta;
@@ -71,8 +71,9 @@ module.exports.updateDelta = function (req, res, next) {
                 let amount = product.amount;
                 amount += newDelta;
                 if (amount < 0) {
-                    return res.status(422).send({error: "Amount cannot drop below 0."});
+                    return res.status(422).send({_id: product._id, increaseDelta: -amount});
                 }
+                product.amount = amount;
                 // Connected with mongoose bug #4455
                 product.deltas = product.deltas.concat([{deviceGuid, localAmountDelta: newDelta}]);
             }
@@ -83,8 +84,8 @@ module.exports.updateDelta = function (req, res, next) {
                 }
                 else {
                     return res.status(200).send({
-                        _id: product._id,
-                        amount: product.amount
+                        _id: savedProduct._id,
+                        amount: savedProduct.amount
                     });
                 }
             });
@@ -121,25 +122,15 @@ module.exports.create = function (req, res, next) {
                 return res.status(422).send({error: "The product with given name already exists"})
             }
 
-            let product = null;
-            if (body._id) {
-                product = new Product({
-                    _id: body._id,
-                    name: body.name,
-                    store: body.store,
-                    price: body.price,
-                    amount: body.amount,
-                    user: req.user._id
-                });
-            } else {
-                product = new Product({
-                    name: body.name,
-                    store: body.store,
-                    price: body.price,
-                    amount: body.amount,
-                    user: req.user._id
-                });
-            }
+            const product = new Product({
+                _id: body._id,
+                name: body.name,
+                store: body.store,
+                price: body.price,
+                amount: body.amount,
+                user: req.user._id,
+                deltas: {deviceGuid: body.deviceGuid, localAmountDelta: body.localAmountDelta}
+            });
 
             product.save(function (err, savedProduct) {
                 if (err) {

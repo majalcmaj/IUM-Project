@@ -39,7 +39,7 @@ class CreateProductScreen extends Component {
             const {navigation} = this.props;
             this.props.createProduct(formContent, (product) => navigation.dispatch(
                 NavigateToProductAndForgetCurrent("ProductScreen",
-                    {product, refresh: this.props.navigation.state.params.refresh})
+                    {productId: product._id, refresh: this.props.navigation.state.params.refresh})
             ));
         }
     }
